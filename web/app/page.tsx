@@ -22,6 +22,8 @@ interface BotStatus {
   logs: string[];
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function Home() {
   const [status, setStatus] = useState<BotStatus | null>(null);
   const [whitelist, setWhitelist] = useState("");
@@ -31,7 +33,7 @@ export default function Home() {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/status");
+      const res = await fetch(`${API_URL}/api/status`);
       const data = await res.json();
       setStatus(data);
       if (data.config) {
@@ -52,21 +54,21 @@ export default function Home() {
 
   const handleStart = async () => {
     setLoading(true);
-    await fetch("http://localhost:5000/api/start", { method: "POST" });
+    await fetch(`${API_URL}/api/start`, { method: "POST" });
     await fetchStatus();
     setLoading(false);
   };
 
   const handleStop = async () => {
     setLoading(true);
-    await fetch("http://localhost:5000/api/stop", { method: "POST" });
+    await fetch(`${API_URL}/api/stop`, { method: "POST" });
     await fetchStatus();
     setLoading(false);
   };
 
   const handleSaveConfig = async () => {
     const coins = whitelist.split(",").map((c) => c.trim().toUpperCase()).filter(Boolean);
-    await fetch("http://localhost:5000/api/config", {
+    await fetch(`${API_URL}/api/config`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
