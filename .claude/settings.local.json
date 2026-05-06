@@ -24,7 +24,12 @@
       "Bash(railway url:*)",
       "Bash(railway service:*)",
       "Bash(railway services:*)",
-      "Bash(railway domain:*)"
+      "Bash(railway domain:*)",
+      "Bash(vercel env:*)",
+      "Bash(vercel --prod)",
+      "Bash(vercel whoami:*)",
+      "Bash(railway restart:*)",
+      "Bash(curl -s https://bot-production-782b.up.railway.app/api/status)"
     ]
   }
 }

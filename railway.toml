@@ -1,0 +1,7 @@
+[build]
+  build = "pip install -r requirements.txt"
+  dockerfile = "Dockerfile"
+
+[deploy]
+  startCommand = "python api/app.py"
+  srcDir = "."
