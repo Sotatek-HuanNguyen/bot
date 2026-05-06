@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m venv venv)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(python bot.py)",
+      "Bash(pkill -f \"python.*bot.py\")",
+      "Bash(python -c \":*)",
+      "Bash(python -m py_compile bot.py)",
+      "Bash(pkill:*)",
+      "Bash(npx create-next-app@latest web --typescript --tailwind --eslint --app --src-dir=false --import-alias=\"@/*\" --no-turbopack --yes)",
+      "Bash(git remote:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
