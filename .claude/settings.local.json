@@ -29,7 +29,9 @@
       "Bash(vercel --prod)",
       "Bash(vercel whoami:*)",
       "Bash(railway restart:*)",
-      "Bash(curl -s https://bot-production-782b.up.railway.app/api/status)"
+      "Bash(curl -s https://bot-production-782b.up.railway.app/api/status)",
+      "Bash(python3 -c \":*)",
+      "Bash(source /Users/huannguyen/Desktop/Demo/bot/venv/bin/activate)"
     ]
   }
 }
