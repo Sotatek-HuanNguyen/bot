@@ -70,11 +70,79 @@ def check_position_sl_tp(client, position):
     return False
 
 
+# ==== BAD POSITION MANAGER ====
+# Ngưỡng P&L để xem là position xấu
+BAD_PNL_PCT = -1.0  # -1% P&L = xấu
+WAIT_TIME_CYCLES = 5  # Đợi 5 cycles trước khi xử lý
+
+def check_and_manage_bad_positions(client, position, bad_positions_counter):
+    """Kiểm tra và quản lý positions xấu."""
+    symbol = position['symbol']
+    side = position['side']
+    entry = position['entry_price']
+    pnl_pct = position['unrealized_pnl']
+
+    # Get current indicators
+    client.symbol = symbol
+    try:
+        klines = client.get_klines()
+        from strategy import calculate_signals
+        signal, ind = calculate_signals(klines)
+    except:
+        return False
+
+    price = ind['price']
+    rsi = ind['rsi']
+
+    # Tính % P&L
+    if side == "LONG":
+        pnl_pct = ((price - entry) / entry) * 100
+    else:
+        pnl_pct = ((entry - price) / entry) * 100
+
+    # ==== TRIGGER ====
+    should_close = False
+    close_reason = ""
+
+    # 1. P&L quá xấu (< -1%)
+    if pnl_pct < BAD_PNL_PCT:
+        bad_positions_counter[symbol] = bad_positions_counter.get(symbol, 0) + 1
+
+        # Đợi vài cycles rồi mới close
+        if bad_positions_counter[symbol] >= WAIT_TIME_CYCLES:
+            if pnl_pct < -2:  # Quá xấu (< -2%)
+                should_close = True
+                close_reason = f"CRITICAL LOSS ({pnl_pct:.1f}%)"
+            elif rsi > 65 and side == "LONG":  # RSI overbought + LONG
+                should_close = True
+                close_reason = f"RSI overbought ({rsi})"
+            elif rsi < 35 and side == "SHORT":  # RSI oversold + SHORT
+                should_close = True
+                close_reason = f"RSI oversold ({rsi})"
+            elif signal and signal != side:  # Signal đổi chiều
+                should_close = True
+                close_reason = f"REVERSE signal ({signal})"
+
+        if should_close:
+            print(f"  -> CLOSING BAD {symbol}: {close_reason} | P&L: {pnl_pct:.1f}%")
+            client.cancel_all_orders()
+            client.close_position()
+            bad_positions_counter[symbol] = 0
+            return True
+
+    else:
+        # Reset counter nếu P&L tốt lên
+        bad_positions_counter[symbol] = 0
+
+    return False
+
+
 def run_bot():
     print_banner()
 
     # Track position SL/TP levels: {symbol: {'side', 'entry', 'sl', 'tp'}}
     active_positions = {}
+    bad_positions_counter = {}  # Track cycles with bad P&L
 
     client = BinanceFuturesClient()
 
@@ -96,8 +164,12 @@ def run_bot():
             # Check SL/TP cho positions đang mở
             for pos in all_positions:
                 client.symbol = pos['symbol']
+
+                # 1. Check SL/TP hit
                 if check_position_sl_tp(client, pos):
-                    # Position closed - wait a bit
+                    time.sleep(1)
+                # 2. Check bad position (P&L xấu, RSI overbought/oversold, reverse signal)
+                elif check_and_manage_bad_positions(client, pos, bad_positions_counter):
                     time.sleep(1)
                 else:
                     # Log PnL
